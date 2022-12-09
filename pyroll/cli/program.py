@@ -11,8 +11,7 @@ import click
 import yaml
 
 import pyroll.core
-from ...core.profile import Profile
-from ...core.unit import Unit
+from pyroll.core import Profile, Unit
 
 from pathlib import Path
 
@@ -126,51 +125,8 @@ def solve(state):
     log = logging.getLogger(__name__)
 
     log.info("Starting solution process...")
-    pyroll.core.solve(state.sequence, state.in_profile)
+    state.sequence.solve(state.in_profile)
     log.info("Finished solution process.")
-
-
-@main.command()
-@click.option(
-    "-f", "--file",
-    help="File to write to.",
-    type=click.Path(dir_okay=False, path_type=Path),
-    default=DEFAULT_REPORT_FILE, show_default=True
-)
-@click.pass_obj
-def report(state: State, file: Path):
-    """Generates a HTML report from the simulation results and writes it to FILE."""
-    from ..reporter import Reporter
-    log = logging.getLogger(__name__)
-
-    rendered = Reporter().render(state.sequence)
-
-    file.write_text(rendered, encoding='utf-8')
-    log.info(f"Wrote report to: {file.absolute()}")
-
-
-@main.command()
-@click.option(
-    "-f", "--file",
-    help="File to write to.",
-    type=click.Path(dir_okay=False, path_type=Path),
-    default=DEFAULT_EXPORT_FILE, show_default=True
-)
-@click.option(
-    "-F", "--format",
-    help="Data format to export to.",
-    default="csv", show_default=True
-)
-@click.pass_obj
-def export(state: State, file: Path, format: str):
-    """Generates a HTML report from the simulation results and writes it to FILE."""
-    from ..exporter import Exporter
-    log = logging.getLogger(__name__)
-
-    exported = Exporter().export(state.sequence, format)
-
-    file.write_bytes(exported)
-    log.info(f"Wrote exported data to: {file.absolute()}")
 
 
 @main.command()
@@ -200,14 +156,14 @@ def create_config(file: Path, include_plugins: bool):
     if include_plugins:
         import pkgutil
         plugins = [
-            module.name
-            for module in pkgutil.iter_modules()
-            if module.name.startswith("pyroll_")
-        ] + [
-            "pyroll." + module.name
-            for module in pkgutil.iter_modules(pyroll.__path__)
-            if module.name not in ["core", "ui", "utils"]
-        ]
+                      module.name
+                      for module in pkgutil.iter_modules()
+                      if module.name.startswith("pyroll_")
+                  ] + [
+                      "pyroll." + module.name
+                      for module in pkgutil.iter_modules(pyroll.__path__)
+                      if module.name not in ["core", "ui", "utils"]
+                  ]
 
         plugins_itemized = "\n".join([f"  - {p}" for p in plugins])
         if plugins_itemized:
