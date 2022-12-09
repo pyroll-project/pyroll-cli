@@ -79,7 +79,7 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
-name = "pyroll"
+name = "pyroll-core"
 version = "2.0.0a2"
 description = "PyRoll rolling simulation framework - core library."
 category = "main"
@@ -96,7 +96,7 @@ Shapely = "^1.8.1"
 type = "git"
 url = "ssh://git@github.com/pyroll-project/pyroll-core.git"
 reference = "remove_ui"
-resolved_reference = "565e36d00bce3fef2cb890bb1f1d922ab47d3bc0"
+resolved_reference = "cbce7c702e8563692cf47fcecb18bcc3f974f067"
 
 [[package]]
 name = "pytest"
@@ -166,7 +166,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "4929491d96dbc3e83091547616b2b2591aaafc71f4737cd56d0f28c2cad389ca"
+content-hash = "b4e373db38e434c78608e57723b3f458ccf07f2c887afc54aab75c051eca04d9"
 
 [metadata.files]
 attrs = [
@@ -227,7 +227,7 @@ pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
-pyroll = []
+pyroll-core = []
 pytest = [
     {file = "pytest-7.2.0-py3-none-any.whl", hash = "sha256:892f933d339f068883b6fd5a459f03d85bfcb355e4981e146d2c7616c21fef71"},
     {file = "pytest-7.2.0.tar.gz", hash = "sha256:c4014eb40e10f11f355ad4e3c2fb2c6c6d1919c73f3b5a433de4708202cade59"},
