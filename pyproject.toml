@@ -26,15 +26,11 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.9, <4.0"
 pyroll = "2.0.0a2"
-pyroll-report = "2.0.0a1"
-pyroll-export = "2.0.0a1"
 click = "^8.0.0"
 PyYAML = "^6.0"
 
 [tool.poetry.group.dev.dependencies]
 pyroll = { git = "ssh://git@github.com/pyroll-project/pyroll-core.git", branch = "remove_ui" }
-pyroll-export = { git = "ssh://git@github.com/pyroll-project/pyroll-export.git" }
-pyroll-report = { git = "ssh://git@github.com/pyroll-project/pyroll-report.git" }
 pytest = "^7.0.0"
 
 [tool.poetry.scripts]

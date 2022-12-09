@@ -220,25 +220,3 @@ def new(ctx: click.Context, dir: Path):
 
     ctx.invoke(create_config, include_plugins=True, file=dir / DEFAULT_CONFIG_FILE)
     ctx.invoke(create_input_py, key="min", file=dir / DEFAULT_INPUT_PY_FILE)
-
-
-@main.command()
-@click.option(
-    "-d", "--dir",
-    help="Path to the project directory.",
-    type=click.Path(file_okay=False, writable=True, path_type=Path),
-    default=".", show_default=True
-)
-@click.pass_context
-def run(ctx: click.Context, dir: Path):
-    """
-    Runs the PyRoll solver in a project and generates a report and export data.
-    This command is basically a shortcut for
-    "pyroll input-py -f "<dir>/input.py solve report -f <dir>/report.html export -F csv -f <dir>/export.csv"
-    in a fresh or existing directory.
-    """
-
-    ctx.invoke(input_py, file=dir / DEFAULT_INPUT_PY_FILE)
-    ctx.invoke(solve)
-    ctx.invoke(report, file=dir / DEFAULT_REPORT_FILE)
-    ctx.invoke(export, file=dir / DEFAULT_EXPORT_FILE, format="csv")
