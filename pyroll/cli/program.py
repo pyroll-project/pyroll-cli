@@ -12,15 +12,13 @@ import click
 import yaml
 
 import pyroll.core
-from pyroll.core import Profile, Unit
+from pyroll.core import Profile, PassSequence
 
 from pathlib import Path
 
 RES_DIR = Path(__file__).parent / "res"
 DEFAULT_INPUT_PY_FILE = "input.py"
 DEFAULT_CONFIG_FILE = "config.yaml"
-DEFAULT_REPORT_FILE = "report.html"
-DEFAULT_EXPORT_FILE = "export.csv"
 
 
 def run_cli():
@@ -34,7 +32,7 @@ def run_cli():
 
 @dataclass
 class State:
-    sequence: List[Unit] = field(default_factory=list)
+    sequence: PassSequence = field(default_factory=list)
     in_profile: Profile = field(default_factory=lambda: None)
     config: dict = field(default_factory=dict)
 
@@ -119,7 +117,8 @@ def input_py(ctx, state: State, file: Path):
         module = importlib.util.module_from_spec(spec)
         sys.modules["__pyroll_input__"] = module
         spec.loader.exec_module(module)
-        state.sequence = list(getattr(module, "sequence"))
+        sequence = getattr(module, "sequence")
+        state.sequence = sequence if isinstance(sequence, PassSequence) else PassSequence(sequence)
         state.in_profile = getattr(module, "in_profile")
     except:
         log.exception("Error during reading of input file.")
