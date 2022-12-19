@@ -1,10 +1,4 @@
-from .program import main
-from importlib.metadata import entry_points
+from .program import run_cli
 
 if __name__ == "__main__":
-    commands = entry_points(group="pyroll.cli.commands")
-
-    for c in commands:
-        main.add_command(c.load())
-
-    main()
+    run_cli()

@@ -34,7 +34,7 @@ pyroll-core = { git = "ssh://git@github.com/pyroll-project/pyroll-core.git", bra
 pytest = "^7.0.0"
 
 [tool.poetry.scripts]
-pyroll = 'pyroll.cli:main'
+pyroll = 'pyroll.cli.program:run_cli'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -6,6 +6,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from typing import List
+from importlib.metadata import entry_points
 
 import click
 import yaml
@@ -20,6 +21,15 @@ DEFAULT_INPUT_PY_FILE = "input.py"
 DEFAULT_CONFIG_FILE = "config.yaml"
 DEFAULT_REPORT_FILE = "report.html"
 DEFAULT_EXPORT_FILE = "export.csv"
+
+
+def run_cli():
+    commands = entry_points(group="pyroll.cli.commands")
+
+    for c in commands:
+        main.add_command(c.load())
+
+    main()
 
 
 @dataclass
