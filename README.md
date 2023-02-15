@@ -5,7 +5,7 @@ See the [core repository](https://github.com/pyroll-project/pyroll-core) for fur
 
 ## Documentation
 
-See the [documentation](https://pyroll.readthedocs.io/en/latest/basic/cli) to learn about basic concepts and
+See the [documentation](https://pyroll.readthedocs.io/en/latest/basic/cli.html) to learn about basic concepts and
 usage.
 
 ## License
