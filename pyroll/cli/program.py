@@ -222,4 +222,4 @@ def new(ctx: click.Context, dir: Path):
     dir.mkdir(exist_ok=True)
 
     ctx.invoke(create_config, include_plugins=True, file=dir / DEFAULT_CONFIG_FILE)
-    ctx.invoke(create_input_py, key="min", file=dir / DEFAULT_INPUT_PY_FILE)
+    ctx.invoke(create_input_py, file=dir / DEFAULT_INPUT_PY_FILE)
