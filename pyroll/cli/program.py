@@ -74,7 +74,7 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     else:
         logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', stream=sys.stdout)
 
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("pyroll.cli")
 
     plugins = list(plugin)
     if "plugins" in config:
@@ -83,7 +83,7 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     for p in plugins:
         try:
             importlib.import_module(p)
-        except:
+        except ImportError:
             log.exception(f"Failed to import the plugin '{p}'.")
             raise
 
@@ -189,20 +189,14 @@ def create_config(file: Path, include_plugins: bool):
     type=click.Path(dir_okay=False, path_type=Path),
     default=DEFAULT_INPUT_PY_FILE, show_default=True
 )
-@click.option(
-    "-k", "--key",
-    help="The name of the sample to create.",
-    type=click.Choice(["min", "trio"], case_sensitive=False),
-    default="trio", show_default=True
-)
-def create_input_py(file: Path, key: str):
+def create_input_py(file: Path):
     """Creates a sample input script in FILE that can be loaded using input-py command."""
     log = logging.getLogger(__name__)
 
     if file.exists():
         click.confirm(f"File {file} already exists, overwrite?", abort=True)
 
-    content = (RES_DIR / f"input_{key}.py").read_text()
+    content = (RES_DIR / f"input.py").read_text()
     file.write_text(content, encoding='utf-8')
     log.info(f"Created input file in: {file.absolute()}")
 

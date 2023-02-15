@@ -17,14 +17,14 @@ logging: # configuration for the logging standard library package
       stream: ext://sys.stdout
     file:
       class: logging.FileHandler
-      level: INFO
+      level: DEBUG
       formatter: file
       filename: pyroll.log
 
   root:
-    level: INFO
+    level: WARNING
     handlers: [ console, file ]
 
   loggers:
-    matplotlib:
-      level: ERROR
+    pyroll:
+      level: DEBUG
