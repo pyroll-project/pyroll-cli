@@ -1,24 +1,31 @@
+import os
 import subprocess
-from pyroll.cli.program import RES_DIR
+from pyroll.cli.program import main
+import click.testing
 
 
 def test_create_config(tmp_path):
-    result = subprocess.run(("pyroll", "create-config", "-p", "false"), cwd=tmp_path, text=True)
+    runner = click.testing.CliRunner()
 
-    print(result.stdout)
+    os.chdir(tmp_path)
+    result = runner.invoke(main, ["create-config", "-p", "false"])
 
-    result.check_returncode()
+    assert result.exit_code == 0
+    print(result.output)
 
     f = (tmp_path / "config.toml")
     assert f.exists()
+    assert "pyroll.cli" not in f.read_text()
 
 
 def test_create_config_with_plugins(tmp_path):
-    result = subprocess.run(("pyroll", "create-config"), cwd=tmp_path, text=True)
+    runner = click.testing.CliRunner()
 
-    print(result.stdout)
+    os.chdir(tmp_path)
+    result = runner.invoke(main, ["create-config"])
 
-    result.check_returncode()
+    assert result.exit_code == 0
+    print(result.output)
 
     f = (tmp_path / "config.toml")
     assert f.exists()

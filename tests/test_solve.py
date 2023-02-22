@@ -1,14 +1,16 @@
-import subprocess
-from pyroll.cli.program import RES_DIR
+from pyroll.cli.program import RES_DIR, main
+import click.testing
+import os
 
 INPUT = (RES_DIR / f"input.py").read_text()
 
 
 def test_solve(tmp_path):
     (tmp_path / "input.py").write_text(INPUT)
+    runner = click.testing.CliRunner()
 
-    result = subprocess.run(("pyroll", "input-py", "solve"), cwd=tmp_path, text=True)
+    os.chdir(tmp_path)
+    result = runner.invoke(main, ["input-py", "solve"])
+    print(result.output)
 
-    print(result.stdout)
-
-    result.check_returncode()
+    assert result.exit_code == 0

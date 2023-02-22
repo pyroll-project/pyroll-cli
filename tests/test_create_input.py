@@ -1,13 +1,16 @@
-import subprocess
-from pyroll.cli.program import RES_DIR
+import os
+from pyroll.cli.program import RES_DIR, main
+import click.testing
 
 
 def test_create_input_py(tmp_path):
-    result = subprocess.run(("pyroll", "create-input-py"), cwd=tmp_path, text=True)
+    runner = click.testing.CliRunner()
 
-    print(result.stdout)
+    os.chdir(tmp_path)
+    result = runner.invoke(main, ["create-input-py"])
 
-    result.check_returncode()
+    assert result.exit_code == 0
+    print(result.output)
 
     f = (tmp_path / "input.py")
     assert f.exists()

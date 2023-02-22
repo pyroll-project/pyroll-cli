@@ -1,13 +1,16 @@
-import subprocess
-from pyroll.cli.program import RES_DIR
+from pyroll.cli.program import RES_DIR, main
+import click.testing
+import os
 
 
 def test_new(tmp_path):
-    result = subprocess.run(("pyroll", "new"), cwd=tmp_path, text=True)
+    runner = click.testing.CliRunner()
 
-    print(result.stdout)
+    os.chdir(tmp_path)
+    result = runner.invoke(main, ["new"])
 
-    result.check_returncode()
+    assert result.exit_code == 0
+    print(result.output)
 
     fi = tmp_path / "input.py"
     fc = tmp_path / "config.toml"
