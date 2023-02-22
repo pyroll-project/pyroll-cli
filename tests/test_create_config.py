@@ -9,9 +9,9 @@ def test_create_config(tmp_path):
 
     result.check_returncode()
 
-    f = (tmp_path / "config.yaml")
+    f = (tmp_path / "config.toml")
     assert f.exists()
-    assert f.read_text() == (RES_DIR / "config.yaml").read_text()
+    assert f.read_text() == (RES_DIR / "config.toml").read_text()
 
 
 def test_create_config_with_plugins(tmp_path):
@@ -21,6 +21,6 @@ def test_create_config_with_plugins(tmp_path):
 
     result.check_returncode()
 
-    f = (tmp_path / "config.yaml")
+    f = (tmp_path / "config.toml")
     assert f.exists()
     assert "pyroll.cli" in f.read_text()

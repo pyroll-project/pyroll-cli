@@ -9,7 +9,7 @@ from typing import List
 from importlib.metadata import entry_points
 
 import click
-import yaml
+import rtoml
 
 import pyroll.core
 from pyroll.core import Profile, PassSequence
@@ -17,8 +17,8 @@ from pyroll.core import Profile, PassSequence
 from pathlib import Path
 
 RES_DIR = Path(__file__).parent / "res"
-DEFAULT_INPUT_PY_FILE = "input.py"
-DEFAULT_CONFIG_FILE = "config.yaml"
+DEFAULT_INPUT_PY_FILE = Path("input.py")
+DEFAULT_CONFIG_FILE = Path("config.toml")
 
 
 def run_cli():
@@ -40,7 +40,7 @@ class State:
 @click.group(chain=True)
 @click.pass_context
 @click.option("--config-file", "-c", default=DEFAULT_CONFIG_FILE, help="The configuration YAML file.",
-              type=click.Path())
+              type=click.Path(dir_okay=False, path_type=Path))
 @click.option("--plugin", "-p", multiple=True, default=[])
 @click.option(
     "-d", "--dir",
@@ -56,16 +56,16 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     os.chdir(dir)
 
     config_dir = Path(click.get_app_dir("pyroll"))
-    base_config_file = config_dir / "config.yaml"
+    base_config_file = config_dir / "config.toml"
 
     if not base_config_file.exists():
         config_dir.mkdir(exist_ok=True)
-        base_config_file.write_text((Path(__file__).parent / "res" / "config.yaml").read_text())
+        base_config_file.write_text((RES_DIR / "config.toml").read_text())
 
-    config = yaml.safe_load(base_config_file.read_text())
+    config = rtoml.load(base_config_file)
 
-    if Path(config_file).exists():
-        config.update(yaml.safe_load(Path(config_file).read_text()))
+    if config_file.exists():
+        config.update(rtoml.load(config_file))
 
     state.config = config
 
@@ -77,8 +77,8 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     log = logging.getLogger("pyroll.cli")
 
     plugins = list(plugin)
-    if "plugins" in config:
-        plugins += list(config["plugins"])
+    if "plugins" in config["pyroll"]:
+        plugins += list(config["pyroll"]["plugins"])
 
     for p in plugins:
         try:
@@ -160,7 +160,7 @@ def create_config(file: Path, include_plugins: bool):
     if file.exists():
         click.confirm(f"File {file} already exists, overwrite?", abort=True)
 
-    content = (RES_DIR / "config.yaml").read_text()
+    content = (RES_DIR / "config.toml").read_text()
 
     if include_plugins:
         import pkgutil
@@ -171,7 +171,7 @@ def create_config(file: Path, include_plugins: bool):
                   ] + [
                       "pyroll." + module.name
                       for module in pkgutil.iter_modules(pyroll.__path__)
-                      if module.name not in ["core", "ui", "utils"]
+                      if module.name not in ["core"]
                   ]
 
         plugins_itemized = "\n".join([f"  - {p}" for p in plugins])

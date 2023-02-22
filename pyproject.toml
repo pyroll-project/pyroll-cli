@@ -36,7 +36,8 @@ requires-python = ">=3.9, <4.0"
 dependencies = [
     "pyroll-core ~= 2.0.0rc",
     "click ~= 8.0",
-    "PyYAML ~=6.0"
+    "PyYAML ~=6.0",
+    "rtoml ~= 0.9"
 ]
 
 dynamic = ["version"]

@@ -1,0 +1,38 @@
+[pyroll]
+
+# list full qualified names of plugins to load (as they were importable in real python code)
+plugins = [
+]
+
+[pyroll.core.config]
+ROLL_PASS_AUTO_ROTATION = true
+GROOVE_PADDING = 0.2
+DEFAULT_MAX_ITERATION_COUNT = 100
+DEFAULT_ITERATION_PRECISION = 1e-2
+ROLL_SURFACE_DISCRETIZATION_COUNT = 100
+
+[logging] # configuration for the logging standard library package
+version = 1
+
+formatters.console.format = '[%(levelname)s] %(name)s: %(message)s'
+formatters.file.format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+
+[logging.handlers.console]
+
+class = "logging.StreamHandler"
+level = "INFO"
+formatter = "console"
+stream = "ext://sys.stdout"
+
+[logging.handlers.file]
+class = "logging.FileHandler"
+level = "DEBUG"
+formatter = "file"
+filename = "pyroll.log"
+
+[logging.root]
+level = "WARNING"
+handlers = ["console", "file"]
+
+[logging.loggers.pyroll]
+level = "DEBUG"

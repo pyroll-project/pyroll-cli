@@ -10,7 +10,7 @@ def test_new(tmp_path):
     result.check_returncode()
 
     fi = tmp_path / "input.py"
-    fc = tmp_path / "config.yaml"
+    fc = tmp_path / "config.toml"
 
     assert fi.exists()
     assert fc.exists()
