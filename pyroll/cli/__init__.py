@@ -1,1 +1,3 @@
 from .program import State, RES_DIR, DEFAULT_INPUT_PY_FILE, DEFAULT_CONFIG_FILE
+
+VERSION = "2.0.0"
