@@ -2,6 +2,8 @@
 
 # list full qualified names of plugins to load (as they were importable in real python code)
 plugins = [
+    {%- for p in plugins %}{{- p -}},
+    {% endfor %}
 ]
 
 [pyroll.core.config]

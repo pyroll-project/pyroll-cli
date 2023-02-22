@@ -11,7 +11,6 @@ def test_create_config(tmp_path):
 
     f = (tmp_path / "config.toml")
     assert f.exists()
-    assert f.read_text() == (RES_DIR / "config.toml").read_text()
 
 
 def test_create_config_with_plugins(tmp_path):

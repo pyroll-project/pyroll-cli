@@ -9,6 +9,7 @@ from typing import List
 from importlib.metadata import entry_points
 
 import click
+import jinja2
 import rtoml
 
 import pyroll.core
@@ -19,6 +20,10 @@ from pathlib import Path
 RES_DIR = Path(__file__).parent / "res"
 DEFAULT_INPUT_PY_FILE = Path("input.py")
 DEFAULT_CONFIG_FILE = Path("config.toml")
+
+JINJA_ENV = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(RES_DIR, encoding="utf-8")
+)
 
 
 def run_cli():
@@ -160,25 +165,22 @@ def create_config(file: Path, include_plugins: bool):
     if file.exists():
         click.confirm(f"File {file} already exists, overwrite?", abort=True)
 
-    content = (RES_DIR / "config.toml").read_text()
+    template = JINJA_ENV.get_template("config.toml")
 
     if include_plugins:
         import pkgutil
         plugins = [
-                      module.name
-                      for module in pkgutil.iter_modules()
-                      if module.name.startswith("pyroll_")
-                  ] + [
-                      "pyroll." + module.name
-                      for module in pkgutil.iter_modules(pyroll.__path__)
-                      if module.name not in ["core"]
-                  ]
+            "pyroll." + module.name
+            for module in pkgutil.iter_modules(pyroll.__path__)
+            if module.name != "core"
+        ]
+    else:
+        plugins = []
 
-        plugins_itemized = "\n".join([f"  - {p}" for p in plugins])
-        if plugins_itemized:
-            content = re.sub(r"plugins:(.*)\n\s*\[\]", rf"plugins:\g<1>\n{plugins_itemized}", content)
-
-    file.write_text(content, encoding='utf-8')
+    result = template.render(
+        plugins=plugins
+    )
+    file.write_text(result, encoding='utf-8')
     log.info(f"Created config file in: {file.absolute()}")
 
 
