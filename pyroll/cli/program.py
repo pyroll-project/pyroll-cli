@@ -95,6 +95,19 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     if plugins:
         log.info(f"Loaded plugins: {plugins}.")
 
+    for n, v in config["pyroll"].items():
+        if isinstance(v, dict):
+            _set_config_values(f"pyroll.{n}", v)
+
+
+def _set_config_values(name, values):
+    if name in sys.modules:
+        for n, v in values.items():
+            if isinstance(v, dict):
+                _set_config_values(f"{name}.{n}", v)
+            else:
+                setattr(sys.modules[name], n, v)
+
 
 @main.command()
 @click.option(
