@@ -65,7 +65,11 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
 
     if not base_config_file.exists():
         config_dir.mkdir(exist_ok=True)
-        base_config_file.write_text((RES_DIR / "config.toml").read_text())
+        template = JINJA_ENV.get_template("config.toml")
+        result = template.render(
+            plugins=[]
+        )
+        base_config_file.write_text(result, encoding='utf-8')
 
     config = rtoml.load(base_config_file)
 
