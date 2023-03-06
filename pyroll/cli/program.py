@@ -37,9 +37,10 @@ def run_cli():
 
 @dataclass
 class State:
-    sequence: PassSequence = field(default_factory=list)
+    sequence: PassSequence = field(default_factory=lambda: PassSequence([]))
     in_profile: Profile = field(default_factory=lambda: None)
     config: dict = field(default_factory=dict)
+    logger: logging.Logger = field(default_factory=lambda: None)
 
 
 @click.group(chain=True)
@@ -83,7 +84,7 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     else:
         logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', stream=sys.stdout)
 
-    log = logging.getLogger("pyroll.cli")
+    state.logger = logging.getLogger("pyroll.cli")
 
     plugins = list(plugin)
     if "plugins" in config["pyroll"]:
@@ -93,11 +94,11 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
         try:
             importlib.import_module(p)
         except ImportError:
-            log.exception(f"Failed to import the plugin '{p}'.")
+            state.logger.exception(f"Failed to import the plugin '{p}'.")
             raise
 
     if plugins:
-        log.info(f"Loaded plugins: {plugins}.")
+        state.logger.info(f"Loaded plugins: {plugins}.")
 
     for n, v in config["pyroll"].items():
         if isinstance(v, dict):
@@ -121,8 +122,7 @@ def _set_config_values(name, values):
     default=DEFAULT_INPUT_PY_FILE, show_default=True
 )
 @click.pass_obj
-@click.pass_context
-def input_py(ctx, state: State, file: Path):
+def input_py(state: State, file: Path):
     """
     Reads input data from the Python script FILE.
     The script must define two attributes:
@@ -131,8 +131,7 @@ def input_py(ctx, state: State, file: Path):
     sequence:\titerable of Unit objects (RollPass or Transport) defining the pass sequence
     """
 
-    log = logging.getLogger(__name__)
-    log.info(f"Reading input from: {file.absolute()}")
+    state.logger.info(f"Reading input from: {file.absolute()}")
 
     try:
         spec = importlib.util.spec_from_file_location("__pyroll_input__", file)
@@ -143,21 +142,19 @@ def input_py(ctx, state: State, file: Path):
         state.sequence = sequence if isinstance(sequence, PassSequence) else PassSequence(sequence)
         state.in_profile = getattr(module, "in_profile")
     except:
-        log.exception("Error during reading of input file.")
+        state.logger.exception("Error during reading of input file.")
         raise
 
-    log.info(f"Finished reading input.")
+    state.logger.info(f"Finished reading input.")
 
 
 @main.command()
 @click.pass_obj
-def solve(state):
+def solve(state: State):
     """Runs the solution procedure on all loaded roll passes."""
-    log = logging.getLogger(__name__)
-
-    log.info("Starting solution process...")
+    state.logger.info("Starting solution process...")
     state.sequence.solve(state.in_profile)
-    log.info("Finished solution process.")
+    state.logger.info("Finished solution process.")
 
 
 @main.command()
@@ -175,10 +172,9 @@ def solve(state):
     type=click.BOOL,
     default=True, show_default=True
 )
-def create_config(file: Path, include_plugins: bool):
+@click.pass_obj
+def create_config(state: State, file: Path, include_plugins: bool):
     """Creates a standard config in FILE that can be used with the -c option."""
-    log = logging.getLogger(__name__)
-
     if file.exists():
         click.confirm(f"File {file} already exists, overwrite?", abort=True)
 
@@ -198,7 +194,7 @@ def create_config(file: Path, include_plugins: bool):
         plugins=plugins
     )
     file.write_text(result, encoding='utf-8')
-    log.info(f"Created config file in: {file.absolute()}")
+    state.logger.info(f"Created config file in: {file.absolute()}")
 
 
 @main.command()
@@ -208,16 +204,15 @@ def create_config(file: Path, include_plugins: bool):
     type=click.Path(dir_okay=False, path_type=Path),
     default=DEFAULT_INPUT_PY_FILE, show_default=True
 )
-def create_input_py(file: Path):
+@click.pass_obj
+def create_input_py(state: State, file: Path):
     """Creates a sample input script in FILE that can be loaded using input-py command."""
-    log = logging.getLogger(__name__)
-
     if file.exists():
         click.confirm(f"File {file} already exists, overwrite?", abort=True)
 
     content = (RES_DIR / f"input.py").read_text()
     file.write_text(content, encoding='utf-8')
-    log.info(f"Created input file in: {file.absolute()}")
+    state.logger.info(f"Created input file in: {file.absolute()}")
 
 
 @main.command()
