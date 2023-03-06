@@ -2,17 +2,16 @@
 
 # list full qualified names of plugins to load (as they were importable in real python code)
 plugins = [
-    {%- for p in plugins %}{{- p -}},
+    {% for p in plugins %}" {{- p -}} ",
     {% endfor %}
 ]
 
-[pyroll.core.config]
-ROLL_PASS_AUTO_ROTATION = true
-GROOVE_PADDING = 0.2
-DEFAULT_MAX_ITERATION_COUNT = 100
-DEFAULT_ITERATION_PRECISION = 1e-2
-ROLL_SURFACE_DISCRETIZATION_COUNT = 100
-
+{% for m, cs in config_constants.items() %}
+[{{- m -}}]
+{% for c in cs %}
+{{-c-}}
+{% endfor -%}
+{% endfor %}
 [logging] # configuration for the logging standard library package
 version = 1
 

@@ -37,7 +37,7 @@ def run_cli():
 
 @dataclass
 class State:
-    sequence: PassSequence = field(default_factory=lambda: PassSequence([]))
+    sequence: PassSequence = field(default_factory=lambda: None)
     in_profile: Profile = field(default_factory=lambda: None)
     config: dict = field(default_factory=dict)
     logger: logging.Logger = field(default_factory=lambda: None)
@@ -47,7 +47,7 @@ class State:
 @click.pass_context
 @click.option("--config-file", "-c", default=DEFAULT_CONFIG_FILE, help="The configuration YAML file.",
               type=click.Path(dir_okay=False, path_type=Path))
-@click.option("--no-global-config", "-C", default=False, help="Do not use the global config file.", type=click.BOOL)
+@click.option("--global-config/--no-global-config", "-C/-nC", default=True, help="Whether use the global config file.")
 @click.option("--plugin", "-p", multiple=True, default=[])
 @click.option(
     "-d", "--dir",
@@ -55,7 +55,7 @@ class State:
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     default=".", show_default=True
 )
-def main(ctx: click.Context, config_file: Path, no_global_config: bool, plugin: List[str], dir: Path):
+def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: List[str], dir: Path):
     state = State()
     ctx.obj = state
 
@@ -65,13 +65,13 @@ def main(ctx: click.Context, config_file: Path, no_global_config: bool, plugin: 
     config_dir = Path(click.get_app_dir("pyroll"))
     base_config_file = config_dir / "config.toml"
 
-    config = dict()
+    config = dict(pyroll=dict())
 
-    if not no_global_config:
+    if global_config:
         if not base_config_file.exists():
             config_dir.mkdir(exist_ok=True)
             template = JINJA_ENV.get_template("config.toml")
-            result = template.render()
+            result = template.render(plugins=[], config_constants={})
             base_config_file.write_text(result, encoding='utf-8')
 
         config.update(rtoml.load(base_config_file))
@@ -113,7 +113,11 @@ def _set_config_values(name, values):
             if isinstance(v, dict):
                 _set_config_values(f"{name}.{n}", v)
             else:
-                setattr(sys.modules[name], n, v)
+                orig = getattr(sys.modules[name], n)
+                if isinstance(v, type(orig)):
+                    setattr(sys.modules[name], n, v)
+                else:
+                    setattr(sys.modules[name], n, orig.__class__(v))
 
 
 @main.command()
@@ -154,6 +158,13 @@ def input_py(state: State, file: Path):
 @click.pass_obj
 def solve(state: State):
     """Runs the solution procedure on all loaded roll passes."""
+    if state.sequence is None:
+        state.logger.critical("No pass sequence loaded. Use a command like 'input-py' to load a pass sequence.")
+        sys.exit(1)
+    if state.in_profile is None:
+        state.logger.critical("No pass sequence loaded. Use a command like 'input-py' to load a pass sequence.")
+        sys.exit(1)
+
     state.logger.info("Starting solution process...")
     state.sequence.solve(state.in_profile)
     state.logger.info("Finished solution process.")
@@ -167,33 +178,82 @@ def solve(state: State):
     default=DEFAULT_CONFIG_FILE, show_default=True
 )
 @click.option(
-    "-p", "--include-plugins",
+    "-P/-nP", "--include-plugins/--no-include-plugins",
     help="Whether to include a list of all installed plugins. "
-         "As plugins are considered: top-level packages whose name is starting with 'pyroll_' and "
-         "all packages in the 'pyroll' namespace package except 'core', 'ui' and 'utils'.",
-    type=click.BOOL,
-    default=True, show_default=True
+         "As plugins are considered: all packages in the 'pyroll' namespace package except 'core'.",
+    default=True
+)
+@click.option(
+    "-C/-nC", "--include-config-constants/--no-include-config-constants",
+    help="Whether to include tables of config constants found in installed plugins. "
+         "As plugins are considered: all packages in the 'pyroll' namespace package except 'core'.",
+    default=True
 )
 @click.pass_obj
-def create_config(state: State, file: Path, include_plugins: bool):
+def create_config(state: State, file: Path, include_plugins: bool, include_config_constants: bool):
     """Creates a standard config in FILE that can be used with the -c option."""
     if file.exists():
         click.confirm(f"File {file} already exists, overwrite?", abort=True)
 
     template = JINJA_ENV.get_template("config.toml")
 
+    import pkgutil
+
     if include_plugins:
-        import pkgutil
         plugins = [
             "pyroll." + module.name
             for module in pkgutil.iter_modules(pyroll.__path__)
-            if module.name != "core"
+            if module.name not in ["core", "cli", "report", "export"]
         ]
     else:
         plugins = []
 
+    if include_config_constants:
+        def _gen_modules():
+            modules = [
+                          "pyroll." + m.name
+                          for m in pkgutil.iter_modules(pyroll.__path__)
+                      ] + [
+                          "pyroll." + m.name + ".config"
+                          for m in pkgutil.iter_modules(pyroll.__path__)
+                      ]
+            for m in modules:
+                try:
+                    module = importlib.import_module(m)
+                    sys.modules["__pyroll_input__"] = module
+                    yield module
+                except ImportError:
+                    continue
+
+        def _convert(value: object):
+            if isinstance(value, Path):
+                return str(value)
+            return value
+
+        def _gen_values(module):
+            for n, v in module.__dict__.items():
+                if (
+                        n.isupper()
+                        and not n.startswith("_")
+                        and n not in ["VERSION"]
+                ):
+                    try:
+                        yield rtoml.dumps({n: _convert(v)})
+                    except rtoml.TomlSerializationError:
+                        state.logger.error(f"Could not serialize '{module.__name__}.{n}'. Skipping.")
+                        continue
+
+        config_constants = {
+            m.__name__: values
+            for m in _gen_modules()
+            if (values := list(_gen_values(m)))
+        }
+    else:
+        config_constants = dict()
+
     result = template.render(
-        plugins=plugins
+        plugins=plugins,
+        config_constants=config_constants,
     )
     file.write_text(result, encoding='utf-8')
     state.logger.info(f"Created config file in: {file.absolute()}")
