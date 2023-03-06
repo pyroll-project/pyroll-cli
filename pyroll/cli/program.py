@@ -47,6 +47,7 @@ class State:
 @click.pass_context
 @click.option("--config-file", "-c", default=DEFAULT_CONFIG_FILE, help="The configuration YAML file.",
               type=click.Path(dir_okay=False, path_type=Path))
+@click.option("--no-global-config", "-C", default=False, help="Do not use the global config file.", type=click.BOOL)
 @click.option("--plugin", "-p", multiple=True, default=[])
 @click.option(
     "-d", "--dir",
@@ -54,7 +55,7 @@ class State:
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     default=".", show_default=True
 )
-def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
+def main(ctx: click.Context, config_file: Path, no_global_config: bool, plugin: List[str], dir: Path):
     state = State()
     ctx.obj = state
 
@@ -64,15 +65,16 @@ def main(ctx: click.Context, config_file: Path, plugin: List[str], dir: Path):
     config_dir = Path(click.get_app_dir("pyroll"))
     base_config_file = config_dir / "config.toml"
 
-    if not base_config_file.exists():
-        config_dir.mkdir(exist_ok=True)
-        template = JINJA_ENV.get_template("config.toml")
-        result = template.render(
-            plugins=[]
-        )
-        base_config_file.write_text(result, encoding='utf-8')
+    config = dict()
 
-    config = rtoml.load(base_config_file)
+    if not no_global_config:
+        if not base_config_file.exists():
+            config_dir.mkdir(exist_ok=True)
+            template = JINJA_ENV.get_template("config.toml")
+            result = template.render()
+            base_config_file.write_text(result, encoding='utf-8')
+
+        config.update(rtoml.load(base_config_file))
 
     if config_file.exists():
         config.update(rtoml.load(config_file))
