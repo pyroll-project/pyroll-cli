@@ -45,7 +45,7 @@ class State:
 
 @click.group(chain=True)
 @click.pass_context
-@click.option("--config-file", "-c", default=DEFAULT_CONFIG_FILE, help="The configuration YAML file.",
+@click.option("--config-file", "-c", default=DEFAULT_CONFIG_FILE, help="The configuration TOML file.",
               type=click.Path(dir_okay=False, path_type=Path))
 @click.option("--global-config/--no-global-config", "-C/-nC", default=True, help="Whether use the global config file.")
 @click.option("--plugin", "-p", multiple=True, default=[])
@@ -289,9 +289,9 @@ def new(ctx: click.Context, dir: Path):
     """
     Creates a new PyRoll simulation project in the directory specified by -d/--dir.
     The directory will be created if not already existing.
-    Creates a config.yaml and an input.py in the specified directory.
+    Creates a config.toml and an input.py in the specified directory.
     This command is basically a shortcut for
-    "pyroll -c <dir>/config.yaml create-config -p -f "<dir>/config.yaml create-input-py -k min -f <dir>/input.py"
+    "pyroll -c <dir>/config.yaml create-config -P -C -f "<dir>/config.toml create-input-py -f <dir>/input.py"
     in a fresh or existing directory.
     """
 
