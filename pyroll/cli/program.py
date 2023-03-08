@@ -103,21 +103,13 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
         state.logger.info(f"Loaded plugins: {plugins}.")
 
     for n, v in config["pyroll"].items():
-        if isinstance(v, dict):
-            _set_config_values(f"pyroll.{n}", v)
-
-
-def _set_config_values(name, values):
-    if name in sys.modules:
-        for n, v in values.items():
-            if isinstance(v, dict):
-                _set_config_values(f"{name}.{n}", v)
-            else:
-                orig = getattr(sys.modules[name], n)
-                if isinstance(v, type(orig)):
-                    setattr(sys.modules[name], n, v)
-                else:
-                    setattr(sys.modules[name], n, orig.__class__(v))
+        full_name = f"pyroll.{n}"
+        if isinstance(v, dict) and full_name in sys.modules:
+            module = sys.modules.get(full_name, None)
+            if module:
+                config = getattr(module, "Config", None)
+                if config:
+                    config.update(v)
 
 
 @main.command()
@@ -211,12 +203,9 @@ def create_config(state: State, file: Path, include_plugins: bool, include_confi
     if include_config_constants:
         def _gen_modules():
             modules = [
-                          "pyroll." + m.name
-                          for m in pkgutil.iter_modules(pyroll.__path__)
-                      ] + [
-                          "pyroll." + m.name + ".config"
-                          for m in pkgutil.iter_modules(pyroll.__path__)
-                      ]
+                "pyroll." + m.name
+                for m in pkgutil.iter_modules(pyroll.__path__)
+            ]
             for m in modules:
                 try:
                     module = importlib.import_module(m)
@@ -231,12 +220,10 @@ def create_config(state: State, file: Path, include_plugins: bool, include_confi
             return value
 
         def _gen_values(module):
-            for n, v in module.__dict__.items():
-                if (
-                        n.isupper()
-                        and not n.startswith("_")
-                        and n not in ["VERSION"]
-                ):
+            config = getattr(module, "Config", None)
+            if config:
+                for n in config.to_dict():
+                    v = getattr(config, n)
                     try:
                         yield rtoml.dumps({n: _convert(v)})
                     except rtoml.TomlSerializationError:
