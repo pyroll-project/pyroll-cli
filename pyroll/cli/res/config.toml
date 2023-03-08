@@ -1,17 +1,17 @@
 [pyroll]
-
-# list full qualified names of plugins to load (as they were importable in real python code)
-plugins = [
+plugins = [# list of plugin packages to load
     {% for p in plugins %}" {{- p -}} ",
     {% endfor %}
 ]
 
+# configuration constants for core and plugin packages
 {% for m, cs in config_constants.items() %}
 [{{- m -}}]
 {% for c in cs %}
 {{-c-}}
 {% endfor -%}
 {% endfor %}
+
 [logging] # configuration for the logging standard library package
 version = 1
 
@@ -19,7 +19,6 @@ formatters.console.format = '[%(levelname)s] %(name)s: %(message)s'
 formatters.file.format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 
 [logging.handlers.console]
-
 class = "logging.StreamHandler"
 level = "INFO"
 formatter = "console"
