@@ -220,7 +220,7 @@ def create_config(state: State, file: Path, include_plugins: bool, include_confi
             for m in modules:
                 try:
                     module = importlib.import_module(m)
-                    sys.modules["__pyroll_input__"] = module
+                    sys.modules[m] = module
                     yield module
                 except ImportError:
                     continue
