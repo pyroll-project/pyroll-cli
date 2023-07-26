@@ -352,12 +352,14 @@ def shell(ctx, history_file):
 
     main.add_command(exit)
 
-    console.print()
     console.print(
         "Launching interactive shell mode.\n"
         "Enter PyRolL CLI subcommands as you wish, state is maintained between evaluations.\n"
+        "Global options (-c/--config-file, -C/--global-config, -p/--plugin, ...) do [b]not[/b] work from here, "
+        "specify them when lauching `pyroll shell`.\n\n"
         "Type [b]--help[/b] for help on available subcommands.\n"
-        "Type [b]exit[/b] to leave the shell."
+        "Type [b]exit[/b] to leave the shell.",
+        highlight=False
     )
 
     prompt_kwargs = dict(
