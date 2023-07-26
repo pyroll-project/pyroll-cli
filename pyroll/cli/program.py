@@ -11,7 +11,7 @@ import click
 import click_repl
 import jinja2
 import rtoml
-from .rich import console
+from .rich import console, SUPPRESS_TRACEBACKS
 from rich.logging import RichHandler
 from rich.pretty import pretty_repr
 from prompt_toolkit.history import FileHistory
@@ -99,12 +99,18 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
 
     if "logging" in config:
         console.print("Configured logging from config.")
+
+        # parse module names for traceback suppression
+        for n, h in config["logging"]["handlers"].items():
+            if "tracebacks_suppress" in h:
+                h["tracebacks_suppress"] = [_try_parse_module_suppression(s) for s in h["tracebacks_suppress"]]
+
         logging.config.dictConfig(config["logging"])
     else:
         console.print("Using default logging.")
         logging.basicConfig(
             level="INFO", format='[bold]%(name)s:[/bold] %(message)s', datefmt="[%X]",
-            handlers=[RichHandler(markup=True)]
+            handlers=[RichHandler(markup=True, rich_tracebacks=True, tracebacks_suppress=SUPPRESS_TRACEBACKS)]
         )
     console.print()
 
@@ -132,6 +138,17 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
                 config = getattr(module, "Config", None)
                 if config:
                     config.update(v)
+
+
+def _try_parse_module_suppression(key: str):
+    try:
+        m = importlib.import_module(key)
+        p = Path(m.__file__).resolve()
+        if p.name == "__init__.py":
+            return str(p.parent)
+        return str(p)
+    except ImportError:
+        return key
 
 
 @main.command()
@@ -183,9 +200,12 @@ def solve(state: State):
         sys.exit(1)
 
     with console.status("[bold green]Running solution process..."):
-        state.logger.info("Starting solution process...")
-        state.sequence.solve(state.in_profile)
-        state.logger.info("Finished solution process.")
+        try:
+            state.logger.info("Starting solution process...")
+            state.sequence.solve(state.in_profile)
+            state.logger.info("Finished solution process.")
+        except RuntimeError as e:
+            state.logger.exception("Solution process failed with error:", exc_info=e)
 
 
 @main.command()

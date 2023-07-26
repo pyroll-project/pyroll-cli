@@ -6,11 +6,13 @@ from rich.traceback import install
 import pyroll.core
 import click
 
+SUPPRESS_TRACEBACKS = [
+    pyroll.core.hooks.__file__,
+    click
+]
+
 install(
     console=console,
     show_locals=False,
-    suppress=[
-        pyroll.core.hooks.__file__,
-        click
-    ]
+    suppress=SUPPRESS_TRACEBACKS
 )
