@@ -15,14 +15,14 @@ plugins = [# list of plugin packages to load
 [logging] # configuration for the logging standard library package
 version = 1
 
-formatters.console.format = '[%(levelname)s] %(name)s: %(message)s'
+formatters.console.format = '[bold]%(name)s:[/bold] %(message)s'
 formatters.file.format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 
 [logging.handlers.console]
-class = "logging.StreamHandler"
+class = "rich.logging.RichHandler"
 level = "INFO"
 formatter = "console"
-stream = "ext://sys.stdout"
+markup = true
 
 [logging.handlers.file]
 class = "logging.FileHandler"

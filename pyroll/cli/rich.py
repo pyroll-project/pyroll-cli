@@ -1,6 +1,6 @@
-from rich.console import Console
+from rich import get_console
 
-console = Console()
+console = get_console()
 
 from rich.traceback import install
 import pyroll.core
