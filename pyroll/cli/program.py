@@ -2,7 +2,6 @@ import importlib.util
 import logging.config
 import logging
 import os
-import re
 import sys
 from dataclasses import dataclass, field
 from typing import List
@@ -11,6 +10,7 @@ from importlib.metadata import entry_points
 import click
 import jinja2
 import rtoml
+from .rich import console
 
 import pyroll.core
 from pyroll.core import Profile, PassSequence
@@ -157,9 +157,10 @@ def solve(state: State):
         state.logger.critical("No pass sequence loaded. Use a command like 'input-py' to load a pass sequence.")
         sys.exit(1)
 
-    state.logger.info("Starting solution process...")
-    state.sequence.solve(state.in_profile)
-    state.logger.info("Finished solution process.")
+    with console.status("[bold green]Running solution process..."):
+        state.logger.info("Starting solution process...")
+        state.sequence.solve(state.in_profile)
+        state.logger.info("Finished solution process.")
 
 
 @main.command()
