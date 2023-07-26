@@ -11,6 +11,7 @@ import click
 import jinja2
 import rtoml
 from .rich import console
+from rich.logging import RichHandler
 
 import pyroll.core
 from pyroll.core import Profile, PassSequence
@@ -56,6 +57,10 @@ class State:
     default=".", show_default=True
 )
 def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: List[str], dir: Path):
+    from . import VERSION
+    console.print(f"This is [green]PyRolL CLI v{VERSION}[/green] using [b]PyRolL Core v{pyroll.core.VERSION}[/b].\n",
+                  highlight=False)
+
     state = State()
     ctx.obj = state
 
@@ -73,18 +78,28 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
             template = JINJA_ENV.get_template("config.toml")
             result = template.render(plugins=[], config_constants={})
             base_config_file.write_text(result, encoding='utf-8')
+            console.print(f"Created global config file '{base_config_file}'.")
+        else:
+            console.print(f"Using global config file '{base_config_file}'.")
 
         config.update(rtoml.load(base_config_file))
 
     if config_file.exists():
+        console.print(f"Using local config file '{config_file.resolve()}'.")
         config.update(rtoml.load(config_file))
 
     state.config = config
 
     if "logging" in config:
+        console.print("Configured logging from config.")
         logging.config.dictConfig(config["logging"])
     else:
-        logging.basicConfig(format='[%(levelname)s] %(name)s: %(message)s', stream=sys.stdout)
+        console.print("Using default logging.")
+        logging.basicConfig(
+            level="INFO", format='[bold]%(name)s:[/bold] %(message)s', datefmt="[%X]",
+            handlers=[RichHandler(markup=True)]
+        )
+    console.print()
 
     state.logger = logging.getLogger("pyroll.cli")
 
