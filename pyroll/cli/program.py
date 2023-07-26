@@ -12,6 +12,7 @@ import jinja2
 import rtoml
 from .rich import console
 from rich.logging import RichHandler
+from rich.pretty import pretty_repr
 
 import pyroll.core
 from pyroll.core import Profile, PassSequence
@@ -78,14 +79,14 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
             template = JINJA_ENV.get_template("config.toml")
             result = template.render(plugins=[], config_constants={})
             base_config_file.write_text(result, encoding='utf-8')
-            console.print(f"Created global config file '{base_config_file}'.")
+            console.print(f"Created global config file: {base_config_file}")
         else:
-            console.print(f"Using global config file '{base_config_file}'.")
+            console.print(f"Using global config file: {base_config_file}")
 
         config.update(rtoml.load(base_config_file))
 
     if config_file.exists():
-        console.print(f"Using local config file '{config_file.resolve()}'.")
+        console.print(f"Using local config file: {config_file.resolve()}")
         config.update(rtoml.load(config_file))
 
     state.config = config
@@ -111,11 +112,11 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
         try:
             importlib.import_module(p)
         except ImportError:
-            state.logger.exception(f"Failed to import the plugin '{p}'.")
+            state.logger.exception(f"Failed to import the plugin: '%s'", p)
             raise
 
     if plugins:
-        state.logger.info(f"Loaded plugins: {plugins}.")
+        state.logger.info(f"Loaded plugins: %s", pretty_repr(plugins))
 
     for n, v in config["pyroll"].items():
         full_name = f"pyroll.{n}"
@@ -144,7 +145,7 @@ def input_py(state: State, file: Path):
     sequence:\titerable of Unit objects (RollPass or Transport) defining the pass sequence
     """
 
-    state.logger.info(f"Reading input from: {file.absolute()}")
+    state.logger.info(f"Reading input from: %s", file.absolute())
 
     try:
         spec = importlib.util.spec_from_file_location("__pyroll_input__", file)
@@ -154,11 +155,14 @@ def input_py(state: State, file: Path):
         sequence = getattr(module, "sequence")
         state.sequence = sequence if isinstance(sequence, PassSequence) else PassSequence(sequence)
         state.in_profile = getattr(module, "in_profile")
-    except:
-        state.logger.exception("Error during reading of input file.")
+    except Exception as e:
+        state.logger.exception("Error during reading of input file.", exc_info=e)
         raise
 
     state.logger.info(f"Finished reading input.")
+
+    state.logger.info("Loaded in profile: %s", pretty_repr(state.in_profile))
+    state.logger.info("Loaded pass sequence: %s", pretty_repr(state.sequence))
 
 
 @main.command()
@@ -259,7 +263,7 @@ def create_config(state: State, file: Path, include_plugins: bool, include_confi
         config_constants=config_constants,
     )
     file.write_text(result, encoding='utf-8')
-    state.logger.info(f"Created config file in: {file.absolute()}")
+    state.logger.info(f"Created config file: %s", file.absolute())
 
 
 @main.command()
