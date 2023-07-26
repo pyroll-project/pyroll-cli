@@ -8,11 +8,13 @@ from typing import List
 from importlib.metadata import entry_points
 
 import click
+import click_repl
 import jinja2
 import rtoml
 from .rich import console
 from rich.logging import RichHandler
 from rich.pretty import pretty_repr
+from prompt_toolkit.history import FileHistory
 
 import pyroll.core
 from pyroll.core import Profile, PassSequence
@@ -22,6 +24,10 @@ from pathlib import Path
 RES_DIR = Path(__file__).parent / "res"
 DEFAULT_INPUT_PY_FILE = Path("input.py")
 DEFAULT_CONFIG_FILE = Path("config.toml")
+
+APP_DIR = Path(click.get_app_dir("pyroll"))
+GLOBAL_CONFIG_FILE = APP_DIR / "config.toml"
+DEFAULT_HISTORY_FILE = APP_DIR / "shell_history"
 
 JINJA_ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(RES_DIR, encoding="utf-8")
@@ -58,6 +64,9 @@ class State:
     default=".", show_default=True
 )
 def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: List[str], dir: Path):
+    if ctx.obj:
+        return
+
     from . import VERSION
     console.print(f"This is [green]PyRolL CLI v{VERSION}[/green] using [b]PyRolL Core v{pyroll.core.VERSION}[/b].\n",
                   highlight=False)
@@ -68,22 +77,19 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
     dir.mkdir(exist_ok=True)
     os.chdir(dir)
 
-    config_dir = Path(click.get_app_dir("pyroll"))
-    base_config_file = config_dir / "config.toml"
-
     config = dict(pyroll=dict())
 
     if global_config:
-        if not base_config_file.exists():
-            config_dir.mkdir(exist_ok=True)
+        if not GLOBAL_CONFIG_FILE.exists():
+            APP_DIR.mkdir(exist_ok=True)
             template = JINJA_ENV.get_template("config.toml")
             result = template.render(plugins=[], config_constants={})
-            base_config_file.write_text(result, encoding='utf-8')
-            console.print(f"Created global config file: {base_config_file}")
+            GLOBAL_CONFIG_FILE.write_text(result, encoding='utf-8')
+            console.print(f"Created global config file: {GLOBAL_CONFIG_FILE}")
         else:
-            console.print(f"Using global config file: {base_config_file}")
+            console.print(f"Using global config file: {GLOBAL_CONFIG_FILE}")
 
-        config.update(rtoml.load(base_config_file))
+        config.update(rtoml.load(GLOBAL_CONFIG_FILE))
 
     if config_file.exists():
         console.print(f"Using local config file: {config_file.resolve()}")
@@ -306,3 +312,36 @@ def new(ctx: click.Context, dir: Path):
 
     ctx.invoke(create_config, include_plugins=True, file=dir / DEFAULT_CONFIG_FILE)
     ctx.invoke(create_input_py, file=dir / DEFAULT_INPUT_PY_FILE)
+
+
+@main.command()
+@click.option(
+    "--history-file",
+    help="File to read/write the shell history to.",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=DEFAULT_HISTORY_FILE, show_default=True
+)
+@click.pass_context
+def shell(ctx, history_file):
+    """Opens a shell or REPL (Read Evaluate Print Loop) for interactive usage."""
+
+    @main.command
+    def exit():
+        """Exits the shell or REPL."""
+        click_repl.exit()
+
+    main.add_command(exit)
+
+    console.print()
+    console.print(
+        "Launching interactive shell mode.\n"
+        "Enter PyRolL CLI subcommands as you wish, state is maintained between evaluations.\n"
+        "Type [b]--help[/b] for help on available subcommands.\n"
+        "Type [b]exit[/b] to leave the shell."
+    )
+
+    prompt_kwargs = dict(
+        history=FileHistory(str(history_file.resolve())),
+        message=[("bold", "\npyroll ")]
+    )
+    click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
