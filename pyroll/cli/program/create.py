@@ -120,7 +120,7 @@ def create_input_py(state: State, file: Path):
     default=".", show_default=True
 )
 @click.pass_context
-def new(ctx: click.Context, dir: Path):
+def create_project(ctx: click.Context, dir: Path):
     """
     Creates a new PyRoll simulation project in the directory specified by -d/--dir.
     The directory will be created if not already existing.

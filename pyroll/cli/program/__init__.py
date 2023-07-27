@@ -16,7 +16,7 @@ def _add_default_commands():
     from . import create
     main.add_command(create.create_input_py)
     main.add_command(create.create_config)
-    main.add_command(create.new)
+    main.add_command(create.create_project)
 
     from . import shell
     main.add_command(shell.shell)
