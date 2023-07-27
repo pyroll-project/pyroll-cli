@@ -3,6 +3,7 @@ from pathlib import Path
 import click as click
 
 from .main import main
+from .. import State
 from ..rich import console
 from ..config import DEFAULT_HISTORY_FILE
 
@@ -43,3 +44,18 @@ def shell(ctx, history_file):
         message=[("bold", "\npyroll ")]
     )
     click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
+
+
+@click.command()
+@click.pass_obj
+@click.option(
+    "-y/-n", "--yes/--no",
+    help="Confirm to reset without prompt.",
+    default=False,
+)
+def reset(state: State, yes):
+    """Reset the state of the simulation data."""
+    if yes or click.confirm("Reset simulation state?"):
+        state.logger.info("Reset simulation state.")
+        state.in_profile = None
+        state.sequence = None

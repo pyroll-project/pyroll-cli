@@ -20,6 +20,7 @@ def _add_default_commands():
 
     from . import shell
     main.add_command(shell.shell)
+    main.add_command(shell.reset)
 
     from . import solve
     main.add_command(solve.solve)
