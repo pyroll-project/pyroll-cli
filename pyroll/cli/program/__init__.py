@@ -25,6 +25,9 @@ def _add_default_commands():
     from . import solve
     main.add_command(solve.solve)
 
+    from . import edit
+    main.add_command(edit.edit)
+
 
 def _add_extension_commands():
     commands = entry_points(group="pyroll.cli.commands")
