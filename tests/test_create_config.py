@@ -1,5 +1,4 @@
 import os
-import subprocess
 from pyroll.cli.program import main
 import click.testing
 

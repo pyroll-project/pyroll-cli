@@ -1,4 +1,5 @@
-from pyroll.cli.program import RES_DIR, main
+from pyroll.cli.program import main
+from pyroll.cli.config import RES_DIR
 import click.testing
 import os
 

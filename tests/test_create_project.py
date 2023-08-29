@@ -1,13 +1,14 @@
-from pyroll.cli.program import RES_DIR, main
+from pyroll.cli.program import main
+from pyroll.cli.config import RES_DIR
 import click.testing
 import os
 
 
-def test_new(tmp_path):
+def test_create_project(tmp_path):
     runner = click.testing.CliRunner()
 
     os.chdir(tmp_path)
-    result = runner.invoke(main, ["new"])
+    result = runner.invoke(main, ["create-project"])
 
     assert result.exit_code == 0
     print(result.output)

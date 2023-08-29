@@ -3,7 +3,7 @@ from pathlib import Path
 import click as click
 
 from .main import main
-from .. import State
+from .state import State
 from ..rich import console
 from ..config import DEFAULT_HISTORY_FILE
 
