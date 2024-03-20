@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 
 import click as click
-import rtoml
+import tomli
+import tomli_w
 
 from .state import State
 from ..config import DEFAULT_CONFIG_FILE, JINJA_ENV, DEFAULT_INPUT_PY_FILE, RES_DIR
@@ -73,8 +74,8 @@ def create_config(state: State, file: Path, include_plugins: bool, include_confi
                 for n in config.to_dict():
                     v = getattr(config, n)
                     try:
-                        yield rtoml.dumps({n: _convert(v)})
-                    except rtoml.TomlSerializationError:
+                        yield tomli_w.dumps({n: _convert(v)})
+                    except TypeError:
                         state.logger.error(f"Could not serialize '{module.__name__}.{n}'. Skipping.")
                         continue
 
