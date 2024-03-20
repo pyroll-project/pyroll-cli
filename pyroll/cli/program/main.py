@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List
 import click as click
 import pyroll.core
-import rtoml
+import tomli
 from rich.logging import RichHandler
 from rich.pretty import pretty_repr
 
@@ -54,11 +54,11 @@ def main(ctx: click.Context, config_file: Path, global_config: bool, plugin: Lis
         else:
             console.print(f"Using global config file: {GLOBAL_CONFIG_FILE}")
 
-        config.update(rtoml.load(GLOBAL_CONFIG_FILE))
+        config.update(tomli.loads(GLOBAL_CONFIG_FILE.read_text()))
 
     if config_file.exists():
         console.print(f"Using local config file: {config_file.resolve()}")
-        config.update(rtoml.load(config_file))
+        config.update(tomli.loads(config_file.read_text()))
 
     state.config = config
 
