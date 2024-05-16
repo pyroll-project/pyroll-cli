@@ -8,7 +8,7 @@ in_profile = pr.Profile.round(
     material=["C45", "steel"],
     flow_stress=40e6,
     density=7.7e3,
-    thermal_capacity=465,
+    specific_heat_capacity=465,
     thermal_conductivity=23,
 )
 
