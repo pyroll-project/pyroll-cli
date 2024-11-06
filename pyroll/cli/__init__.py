@@ -1,4 +1,4 @@
 from .program.state import State
 from .rich import console
 
-VERSION = "2.1.2"
+VERSION = "3.0.0"

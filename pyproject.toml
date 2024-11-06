@@ -34,7 +34,7 @@ classifiers = [
 requires-python = ">=3.9"
 
 dependencies = [
-    "pyroll-core ~= 2.0",
+    "pyroll-core ~= 3.0",
     "click ~= 8.0",
     "tomli ~= 2.0",
     "tomli-w ~= 1.0",
